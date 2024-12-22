@@ -4,7 +4,7 @@ from tkinter import *
 from view import *
 from style import *
 import datetime
-
+from CTkMessagebox import CTkMessagebox
 def clear_pannel(panel):
     """Clear all widgets from the right panel."""
     for widget in panel.winfo_children():
@@ -38,7 +38,7 @@ def addmovie(connection, right_panel):
 
     right_panel.grid_columnconfigure(0, weight=3, uniform="proportional")
     right_panel.grid_columnconfigure(1, weight=1, uniform="proportional")
-
+    right_panel.grid_rowconfigure(0, weight=1)  # Allow the row to stretch vertically
 
     table_frame = Frame(right_panel)
     table_frame.grid(row=0, column=0, rowspan=20, padx=10, pady=10, sticky="nsew")
@@ -105,52 +105,29 @@ def addmovie(connection, right_panel):
         entry.grid(row=i * 2 + 1, column=2, columnspan=2, padx=30, pady=5, sticky="w")
 
         entries[field] = entry
-
-    # File selection for URL
-    def choose_file():
-        """Open a file dialog to select an image file and update the 'URL' entry."""
-        file_path = filedialog.askopenfilename(
-            title="Select an Image",
-            filetypes=[("Image Files", "*.jpg *.jpeg *.png *.bmp *.gif"), ("All Files", "*.*")]
-        )
-        if file_path:
-            entries["URL"] = file_path_label
-            file_path_label.configure(text=file_path)
-            
-
-    # Create label and "Choose File" button for URL
-    url_label = CTkLabel(input_frame, text="URL (Image File)", font=("Open Sans", 14), text_color="#D9D9D9")
-    url_label.grid(row=len(fields) * 2, column=2, columnspan=2, padx=30, pady=5, sticky="w")
-
-    choose_file_button = CTkButton(
-        input_frame, text="Choose File", command=choose_file, fg_color="gray", text_color="white"
-    )
-    choose_file_button.grid(row=len(fields) * 2 + 1, column=2, padx=30, pady=5, sticky="w")
-
-    file_path_label = CTkLabel(input_frame, text="", font=("Open Sans", 12))
-    file_path_label.grid(row=len(fields) * 2 + 1, column=2, padx=30, pady=5, sticky="w")
+        
 
     def submit_movie():
-     
-        movie_data = {field: (entry.get() if isinstance(entry, Entry) else entry.get("1.0", "end-1c")) for field, entry in entries.items()}
-        movie_data["URL"] = file_path_label.cget("text")  # Get the file path from the label
-        release_date = movie_data["Release Date"]
-        try:
-            movie_data["Release Date"] = datetime.datetime.strptime(release_date, "%Y-%m-%d").date()
-        except ValueError:
-            print("Error: Release Date must be in the format YYYY-MM-DD.")
-            return
-        
+        movie_data = {}
+        for field, widget in entries.items():
+            if isinstance(widget, Text):  
+                value = widget.get("1.0", "end-1c")  
+            else:  
+                value = widget.get().strip()
+            print(f"Field: {field}, Value: '{value}'")
+            movie_data[field] = value 
+            
+       
         if not movie_data["Title"] or not movie_data["Original Language"]:
             print("Error: Title and Original Language are required fields.")
             return
-
+       
+            
         try:
-        
             with connection.cursor() as cursor:
                 insert_query = sql.SQL("""
-                    INSERT INTO movie (title, overview, original_language, release_date, runtime, status, tagline, url)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO movie (title, overview, original_language, release_date, runtime, status, tagline)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """)
                 cursor.execute(insert_query, (
                     movie_data["Title"],
@@ -160,7 +137,6 @@ def addmovie(connection, right_panel):
                     int(movie_data["Runtime"]) if movie_data["Runtime"].isdigit() else None,
                     movie_data["Status"],
                     movie_data["Tagline"],
-                    movie_data["URL"]
                 ))
                 connection.commit()
                 print("Movie added successfully.")
@@ -168,7 +144,7 @@ def addmovie(connection, right_panel):
             print(f"Error inserting data into the database: {e}")
             connection.rollback()
 
-    # Add a submit butto
+    # Add a submit button
     submit_button = CTkButton(
         input_frame,
         text="Submit",
@@ -178,3 +154,57 @@ def addmovie(connection, right_panel):
     )
     submit_button.grid(row=len(fields) * 2 + 2, column=2, columnspan=2, pady=10, padx=30, sticky="w")
 
+
+    # Add button frame below Treeview in column 1
+    button_frame = CTkFrame(right_panel)
+    button_frame.grid(row=20, column=0, padx=10, pady=10, sticky="ew")
+  
+    # Create Delete, Update, Insert buttons
+    delete_button = CTkButton(
+        button_frame, text="Delete", fg_color="red", text_color="white",  command=lambda: deletemovie(connection, input_frame, table_frame, table)
+    )
+    delete_button.grid(row=0, column=0, padx=5, pady=5)
+
+    update_button = CTkButton(
+        button_frame, text="Update", fg_color="orange", text_color="white"
+    )
+    update_button.grid(row=0, column=1, padx=5, pady=5)
+
+    insert_button = CTkButton(
+        button_frame, text="Insert", fg_color="green", text_color="white", command=lambda: addmovie(connection, right_panel, )
+    )
+    insert_button.grid(row=0, column=2, padx=5, pady=5)
+
+    button_frame.grid_columnconfigure(0, weight=1)
+    button_frame.grid_columnconfigure(1, weight=1)
+    button_frame.grid_columnconfigure(2, weight=1)
+
+
+def deletemovie(connection, right_panel, table_frame, table):
+    clear_pannel(right_panel)
+
+    # get yes/no answers
+    msg = CTkMessagebox(title="Delete?", message="Are you sure babi?",
+                        icon="question", option_1="Cancel",option_2="Yes")
+    response = msg.get()
+    
+    if response=="Yes":   
+        selected_item = table.selection()  # Lấy item được chọn
+        if not selected_item:
+            print("Error: No movie selected.")
+            return
+
+        item_values = table.item(selected_item, "values")
+        movie_title = item_values[0]  # Giả sử cột đầu tiên là Title
+
+        try:
+            with connection.cursor() as cursor:
+                delete_query = sql.SQL("DELETE FROM movie WHERE title = %s")
+                cursor.execute(delete_query, (movie_title,))
+                connection.commit()
+                print(f"Movie '{movie_title}' deleted successfully.")
+                table.delete(selected_item)  # Xóa hàng trong Treeview
+        except Exception as e:
+            print(f"Error deleting movie: {e}")
+            connection.rollback()
+        

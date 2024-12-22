@@ -8,7 +8,8 @@ class MainScreen(CTk):
         # Set the window to full-screen mode
         width= self.winfo_screenwidth()               
         height= self.winfo_screenheight()               
-        self.geometry("%dx%d" % (width, height))
+        #self.geometry("%dx%d" % (width, height))
+        self.geometry("1600x910")
         self.title("Main Screen")
         set_appearance_mode("dark")
         set_default_color_theme("blue")
