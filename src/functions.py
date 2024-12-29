@@ -5,31 +5,7 @@ from view import *
 from style import *
 import datetime
 from CTkMessagebox import CTkMessagebox
-def clear_pannel(panel):
-    """Clear all widgets from the right panel."""
-    for widget in panel.winfo_children():
-        widget.destroy()
-    
-def views(connection, right_panel): 
-    clear_pannel(right_panel)
-    label1 = CTkLabel(
-            right_panel,
-            text="Movies Table 1",
-
-            font=("Open Sans", 20)
-        )
-    label1.pack(side=TOP)
-    table = ttk.Treeview(right_panel, columns=(1, 2, 3, 4), show="headings")
-    table.heading(1, text="clazz_id")
-    table.heading(1, text="clazz_id")
-    table.heading(2, text="name")
-    table.heading(3, text="lecturer_id")
-    table.heading(4, text="monnitor_id")
-    table.pack(padx=10, pady=10, fill=BOTH, expand=True)  
-
-    for record in fetch_students(connection):
-        table.insert('', 'end', values=record)
-
+from connect_db import *
 
 
 
@@ -56,6 +32,10 @@ def addmovie(connection, right_panel):
     table.pack(side='left', fill='both', expand=True)
 
     h_scrollbar.config(command=table.xview)
+
+    v_scrollbar = Scrollbar(table_frame, orient="vertical", command=table.yview)
+    v_scrollbar.pack(side="right", fill="y")
+    table.config(yscrollcommand=v_scrollbar.set)
 
     table.heading(1, text="Title")
     table.heading(2, text="Overview")
@@ -143,7 +123,8 @@ def addmovie(connection, right_panel):
         except Exception as e:
             print(f"Error inserting data into the database: {e}")
             connection.rollback()
-
+        finally:
+           cursor.close()
     # Add a submit button
     submit_button = CTkButton(
         input_frame,
@@ -166,18 +147,13 @@ def addmovie(connection, right_panel):
     delete_button.grid(row=0, column=0, padx=5, pady=5)
 
     update_button = CTkButton(
-        button_frame, text="Update", fg_color="orange", text_color="white"
+        button_frame, text="Insert", fg_color="green", text_color="white", command=lambda: addmovie(connection, right_panel, )
     )
     update_button.grid(row=0, column=1, padx=5, pady=5)
 
-    insert_button = CTkButton(
-        button_frame, text="Insert", fg_color="green", text_color="white", command=lambda: addmovie(connection, right_panel, )
-    )
-    insert_button.grid(row=0, column=2, padx=5, pady=5)
-
     button_frame.grid_columnconfigure(0, weight=1)
     button_frame.grid_columnconfigure(1, weight=1)
-    button_frame.grid_columnconfigure(2, weight=1)
+
 
 
 def deletemovie(connection, right_panel, table_frame, table):
@@ -207,4 +183,5 @@ def deletemovie(connection, right_panel, table_frame, table):
         except Exception as e:
             print(f"Error deleting movie: {e}")
             connection.rollback()
-        
+        finally:
+            cursor.close()

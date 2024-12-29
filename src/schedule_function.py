@@ -108,7 +108,7 @@ def schedule(connection, right_panel):
     input_frame = CTkFrame(right_panel)
     input_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
-    label = CTkLabel(input_frame, text="Input", font=("Open Sans", 20))
+    label = CTkLabel(input_frame, text="Input: Add file csv", font=("Open Sans", 20))
     label.grid(row =0, column =2, columnspan=2, padx=30, pady=5, sticky="w")
 
     file_path = StringVar() 
@@ -118,10 +118,25 @@ def schedule(connection, right_panel):
         print('Selected:', path_choose)
     
     Button = CTkButton(input_frame, text="Upload", command=UploadAction)
-    Button.grid(row=1, column=2, columnspan=2, padx=30, pady=5, sticky="w")
+    Button.grid(row=1, column=2, columnspan=2, padx=30, pady=10, sticky="w")
 
+    label = CTkLabel(input_frame, text="With this format:", font=("Open Sans", 12), anchor="w")
+    label.grid(row =4, column =2, columnspan=2, padx=30, pady=5, sticky="w")
+    
+    label = CTkLabel(input_frame, text="schedule_movie_date", font=("Open Sans", 11),anchor="w")
+    label.grid(row =5, column =2, columnspan=2, padx=30, pady=5, sticky="w")
+    
+    label = CTkLabel(input_frame, text="schedule_movie_start", font=("Open Sans", 11),anchor="w")
+    label.grid(row =6, column =2, columnspan=2, padx=30, pady=5, sticky="w")
+
+    label = CTkLabel(input_frame, text="room_id", font=("Open Sans", 11),anchor="w")
+    label.grid(row =7, column =2, columnspan=2, padx=30, pady=5, sticky="w")
+
+    label = CTkLabel(input_frame, text="movie_id", font=("Open Sans", 11),anchor="w")
+    label.grid(row =8, column =2, columnspan=2, padx=30, pady=5, sticky="w")
+    
     Submit = CTkButton(input_frame, text="Submit", command=lambda: add_schedule(file_path, connection))
-    Submit.grid(row=2, column=2, columnspan=2, padx=30, pady=5, sticky="w")
+    Submit.grid(row=9, column=2, columnspan=2, padx=30, pady=5, sticky="w")
 
 
     button_frame = CTkFrame(right_panel)
@@ -132,18 +147,19 @@ def schedule(connection, right_panel):
     )
     delete_button.grid(row=0, column=0, padx=5, pady=5)
 
-    update_button = CTkButton(
-        button_frame, text="Update", fg_color="orange", text_color="white"
-    )
-    update_button.grid(row=0, column=1, padx=5, pady=5)
+    # update_button = CTkButton(
+    #     button_frame, text="Update", fg_color="orange", text_color="white"
+    # )
+    #update_button.grid(row=0, column=1, padx=5, pady=5)
 
     insert_button = CTkButton(
         button_frame, text="Insert", fg_color="green", text_color="white", command=lambda: schedule(connection, right_panel)
     )
-    insert_button.grid(row=0, column=2, padx=5, pady=5)
+    insert_button.grid(row=0, column=1, padx=5, pady=5)
     button_frame.grid_columnconfigure(0, weight=1)
     button_frame.grid_columnconfigure(1, weight=1)
-    button_frame.grid_columnconfigure(2, weight=1)
+
+    #button_frame.grid_columnconfigure(2, weight=1)
 
 
 def delete_schedule(connection, right_panel, table):
@@ -183,4 +199,5 @@ def delete_schedule(connection, right_panel, table):
         except Exception as e:
             print(f"An error occurred: {e}")
             connection.rollback()
-
+        finally:
+            cursor.close()

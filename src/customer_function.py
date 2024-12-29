@@ -86,7 +86,8 @@ def customers(connection, right_panel):
         except Exception as e:
             print(f"Error inserting data into the database: {e}")
             connection.rollback()
-
+        finally:
+            cursor.close()
     submit_button = CTkButton(
         input_frame,
         text="Submit",
@@ -97,7 +98,7 @@ def customers(connection, right_panel):
     submit_button.grid(row=len(fields) * 2 + 2, column=2, columnspan=2, pady=10, padx=30, sticky="w")
 
     button_frame = CTkFrame(right_panel)
-    button_frame.grid(row=20, column=1, padx=10, pady=10, sticky="nsew")
+    button_frame.grid(row=20, column=0, padx=10, pady=10, sticky="nsew")
     # Create Delete, Update, Insert buttons
     delete_button = CTkButton(
         button_frame, text="Delete", fg_color="red", text_color="white", command=lambda: delete_schedule(connection, input_frame, table)
@@ -105,14 +106,15 @@ def customers(connection, right_panel):
     delete_button.grid(row=0, column=0, padx=5, pady=5)
 
     update_button = CTkButton(
-        button_frame, text="Update", fg_color="orange", text_color="white"
+         button_frame, text="Insert", fg_color="green", text_color="white", command=lambda: customers(connection, right_panel)
     )
     update_button.grid(row=0, column=1, padx=5, pady=5)
 
     insert_button = CTkButton(
-        button_frame, text="Insert", fg_color="green", text_color="white", command=lambda: customers(connection, right_panel)
-    )
+         button_frame, text="Top spending", fg_color="orange", text_color="white", command=lambda: top_spending(connection, input_frame, table)   
+         )
     insert_button.grid(row=0, column=2, padx=5, pady=5)
+
     button_frame.grid_columnconfigure(0, weight=1)
     button_frame.grid_columnconfigure(1, weight=1)
     button_frame.grid_columnconfigure(2, weight=1)
@@ -152,3 +154,60 @@ def delete_schedule(connection, right_panel,table):
         except Exception as e:
             print(f"An error occurred: {e}")
             connection.rollback()
+        finally:
+            cursor.close()
+
+
+
+def top_spending(connection, right_panel, table):
+    input_frame = CTkFrame(right_panel)
+    input_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+
+    Label = CTkLabel(input_frame, text="Top spending customers", font=("Open Sans", 14), text_color="#D9D9D9")
+    Label.grid(row=0, column=2, columnspan=2, pady = 5, sticky="ew")
+    label_input = CTkLabel(input_frame, text="Input n (Top n):", font=("Open Sans", 14), text_color="#D9D9D9")
+    label_input.grid(row=1, column=2, columnspan=2, pady = 5, sticky="ew")
+    entry_input = CTkEntry(input_frame, font=("Open Sans", 14), border_width=2, corner_radius=10)
+    entry_input.grid(row=2, column=2, columnspan=2, sticky="ew")
+
+    def submit_search():
+        for row in table.get_children():
+            table.delete(row)
+        n = entry_input.get().strip()
+        if n.isdigit():
+            n = int(n)
+            records = top_spending_customers(connection, n)
+            new_columns = (1, 2, 4, 5, 6, 7)
+            table["columns"] = new_columns
+
+            # Update the headings
+            table.heading(1, text="Name")
+            table.heading(2, text="Email")
+            table.heading(4, text="Phone")
+            table.heading(5, text="Username")
+            table.heading(6, text="Total Spent")
+            table.heading(7, text="Ranks")
+
+            # Update column widths
+            new_column_widths = {
+                1: 100,
+                2: 300,
+                4: 300,
+                5: 200,
+                6: 200,
+                7: 80,
+            }
+            for col, width in new_column_widths.items():
+                table.column(col, width=width, anchor="nw")
+            for record in records:
+                    table.insert("", "end", values=record)
+        else:
+            print("Invalid input. Please enter a number.")
+    submit_button = CTkButton(
+        input_frame,
+        text="Submit",
+        command=submit_search,
+        fg_color="#4B9BE5",
+        text_color="white"
+    )
+    submit_button.grid(row=3, column=2, columnspan=2, pady=10, padx=30, sticky="w")

@@ -15,10 +15,11 @@ class MainScreen(CTk):
         set_default_color_theme("blue")
 
         lbltitle = Label(self, bd=20, relief=RIDGE, text="Cinema Management System",
-                         fg="red", bg="white", font=('Arial', 20, "bold"))
+                         fg="#333333", bg="#FFFFF4", font=('Arial', 20, "bold"))
         
         lbltitle.pack(side=TOP, fill=X)
         self.dashboard = Dashboard(self)
+        self.dashboard.configure(bg="#FFFFF4")
         self.dashboard.pack(side=LEFT, fill=Y, padx=0)
         self.right_panel = CTkFrame(self, corner_radius=0)
         self.right_panel.pack(side=RIGHT, fill=BOTH, expand=True)
