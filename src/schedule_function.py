@@ -179,19 +179,20 @@ def delete_schedule(connection, right_panel, table):
         schedule_date = item_values[0]
         start_time = item_values[1]
         room = item_values[2]
+        cinema= item_values[3]
         movie = item_values[4]
 
-        print(f"Deleting schedule: {schedule_date}, {start_time}, {room}, {movie}")
+        print(f"Deleting schedule: {schedule_date}, {start_time}, {room}, {cinema} ,{movie}")
         try:
             with connection.cursor() as cursor:
                 cursor.execute(
                     """
                     DELETE FROM schedule
                     WHERE schedule_movie_date = %s AND schedule_movie_start = %s
-                    AND room_id = (SELECT room_id FROM room WHERE name = %s)
+                    AND room_id = (SELECT room_id FROM room WHERE name = %s AND cinema_id = (SELECT cinema_id FROM cinema WHERE name = %s))
                     AND movie_id = (SELECT movie_id FROM movie WHERE title = %s)
                     """,
-                    (schedule_date, start_time,room, movie),
+                    (schedule_date, start_time,room, cinema, movie),
                 )
                 connection.commit()
                 print(f"Schedule deleted: {schedule_date}, {start_time}, {room}, {movie}")

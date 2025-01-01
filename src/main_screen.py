@@ -25,6 +25,6 @@ class MainScreen(CTk):
         self.right_panel.pack(side=RIGHT, fill=BOTH, expand=True)
         self.dashboard.set_right_panel(self.right_panel)
 
-# if __name__ == "__main__":
-#     root = MainScreen()
-#     root.mainloop()
+if __name__ == "__main__":
+    root = MainScreen()
+    root.mainloop()

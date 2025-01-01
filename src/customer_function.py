@@ -135,9 +135,9 @@ def delete_schedule(connection, right_panel,table):
             return
         print(selected_item)
         item_values = table.item(selected_item, "values")
-        username = item_values[6]
-        email = item_values[4]
-        phone = item_values[5]
+        username = item_values[5]
+        email = item_values[1]
+        phone = item_values[2]
         print(f"Deleting user having: {username}, {email}, {phone}")
         try:
             with connection.cursor() as cursor:
