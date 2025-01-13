@@ -3,4 +3,5 @@ pandas
 numpy
 CTkMessagebox
 customtkinter
+tk
 psycopg2
