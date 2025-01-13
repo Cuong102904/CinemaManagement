@@ -1,0 +1,92 @@
+﻿name,description,price,category
+pop_corn,Large,79000,SNACK
+Coca,Large,20000,WATER
+Combo1,1 Large Pop-corn and 2 Large Coca,110000,COMBO
+Combo2,1 Large Pop-corn and 1 Large Coca,99000,COMBO
+Combo3,1 Large Pop-corn and 1 Medium Coca,89000,COMBO
+Coca,Small,15000,WATER
+pop_corn,medium,60000,SNACK
+Espresso,1 shot,30000,COFFEE
+Americano,1 shot,37500,COFFEE
+Macchiato,1 cup,45000,COFFEE
+Cappuccino,1 cup,52500,COFFEE
+Latte,1 cup,52500,COFFEE
+Mocha,1 cup,60000,COFFEE
+Flat White,1 cup,60000,COFFEE
+Cortado,1 cup,45000,COFFEE
+Affogato,1 cup,67500,COFFEE
+Cold Brew,1 cup,60000,COFFEE
+Nitro Cold Brew,1 cup,67500,COFFEE
+Iced Coffee,1 cup,45000,COFFEE
+Red Eye,1 cup,52500,COFFEE
+Turkish Coffee,1 cup,45000,COFFEE
+Trung Nguyen Coffee,1 cup,37500,COFFEE
+Irish Coffee,1 cup,75000,COFFEE
+Café au Lait,1 cup,52500,COFFEE
+Gibraltar,1 cup,60000,COFFEE
+Ristretto,1 cup,37500,COFFEE
+Lungo,1 cup,45000,COFFEE
+Vienna Coffee,1 cup,60000,COFFEE
+Ethiopian Yirgacheffe,1 cup,67500,COFFEE
+Colombian Supremo,1 cup,90000,COFFEE
+Costa Rican Tarrazú,1 cup,60000,COFFEE
+Jamaican Blue Mountain,1 cup,67500,COFFEE
+Mexican Chiapas,1 cup,67500,COFFEE
+Guatemala Antigua,1 cup,60000,COFFEE
+Ethiopian Sidamo,1 cup,60000,COFFEE
+Brazilian Santos,1 cup,37500,COFFEE
+Indonesian Sumatra,1 cup,60000,COFFEE
+Bac xiu,1 cup,67500,COFFEE
+cà phe kem sữa dừa,1 cup,75000,COFFEE
+Cold Brew Cam vàng,1 cup,30000,COFFEE
+Cold Brew Cherry,1 cup,37500,COFFEE
+Orange Juice,1 cup,45000,JUICE
+Apple Juice,1 cup,37500,JUICE
+Grapefruit Juice,1 cup,45000,JUICE
+Cranberry Juice,1 cup,52500,JUICE
+Pineapple Juice,1 cup,45000,JUICE
+Mango Juice,1 cup,60000,JUICE
+Guava Juice,1 cup,60000,JUICE
+Passion Fruit Juice,1 cup,60000,JUICE
+Pomegranate Juice,1 cup,52500,JUICE
+Lemonade,1 cup,60000,JUICE
+Lime Juice,1 cup,67500,JUICE
+Cherry Juice,1 cup,67500,JUICE
+Peach Juice,1 cup,67500,JUICE
+Apricot Juice,1 cup,60000,JUICE
+Papaya Juice,1 cup,60000,JUICE
+Kiwi Juice,1 cup,37500,JUICE
+Watermelon Juice,1 cup,52500,JUICE
+Strawberry Juice,1 cup,60000,JUICE
+Raspberry Juice,1 cup,60000,JUICE
+Blueberry Juice,1 cup,45000,JUICE
+Blackberry Juice,1 cup,67500,JUICE
+Pear Juice,1 cup,37500,JUICE
+Coconut Water,1 cup,67500,JUICE
+Lychee Juice,1 cup,75000,JUICE
+Acai Berry Juice,1 cup,30000,JUICE
+Plum Juice,1 cup,37500,JUICE
+Kiwi-Strawberry Juice,1 cup,37500,JUICE
+Grape Juice,1 cup,60000,JUICE
+Banana Juice,1 cup,30000,JUICE
+Dragon Fruit Juice,1 cup,37500,JUICE
+Ice Cream Sundae,1 piece,52500,ICE CREAM
+Kem sua chua tran chau,1 piece,60000,ICE CREAM
+kem 1 vien,1 piece,67500,ICE CREAM
+coconut paradise,1 piece,60000,ICE CREAM
+Black Tea,1 cup,45000,TEA
+Green Tea,1 cup,52500,TEA
+Herbal Teas,1 cup,37500,TEA
+cheese cake ,1 piece,60000,CAKE
+chiffon cake mix 3 ,1 piece,52500,CAKE
+matcha chiffon cake,1 piece,45000,CAKE
+Croissant,1 piece,60000,CAKE
+Donut,1 piece,37500,CAKE
+Danish pastry,1 piece,52500,CAKE
+Chocolate Cake,1 piece,60000,CAKE
+Mousse Chanh Leo,1 piece,37500,CAKE
+Mousse Trà Xanh,1 piece,45000,CAKE
+Tiramisu,1 piece,22000,CAKE
+Caramen,1 piece,13000,CAKE
+Yorgurt,1 piece,13000,CAKE
+Pana Cotta,1 piece,22000,CAKE

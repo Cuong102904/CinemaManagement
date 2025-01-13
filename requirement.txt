@@ -1,0 +1,6 @@
+IMDbPY
+pandas
+numpy
+CTkMessagebox
+customtkinter
+psycopg2
