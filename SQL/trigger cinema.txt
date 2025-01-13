@@ -1,0 +1,287 @@
+
+CREATE TRIGGER tg_insert_on_spending
+AFTER UPDATE ON ticket
+FOR EACH ROW
+EXECUTE PROCEDURE tf_update_on_spending();
+
+CREATE OR REPLACE FUNCTION tf_update_on_spending()
+RETURNS TRIGGER AS
+$$
+BEGIN
+	UPDATE users
+	SET total_amount = total_amount + NEW.total_money  -  OLD.total_money
+	WHERE user_id = NEW.user_id;
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+
+
+-- Trigger cho bảng product_detail
+CREATE TRIGGER tg_on_update_price_product
+AFTER INSERT OR UPDATE OR DELETE ON product_detail
+FOR EACH ROW
+EXECUTE FUNCTION tf_on_update_price();
+
+-- Trigger cho bảng seat_detail
+CREATE TRIGGER tg_on_update_price_seat
+AFTER INSERT OR UPDATE OR DELETE ON seat_detail
+FOR EACH ROW
+EXECUTE FUNCTION tf_on_update_price();
+
+-- Hàm chung để cập nhật tổng tiền
+CREATE OR REPLACE FUNCTION tf_on_update_price()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+        -- Nếu là thêm mới hoặc cập nhật
+        IF TG_TABLE_NAME = 'product_detail' THEN
+            -- Xử lý với product_detail
+            UPDATE ticket
+            SET total_money = total_money 
+                + COALESCE(NEW.quantity * NEW.unit_price, 0)
+            WHERE ticket_id = NEW.ticket_id;
+
+        ELSIF TG_TABLE_NAME = 'seat_detail' THEN
+            -- Xử lý với seat_detail
+            UPDATE ticket
+            SET total_money = total_money 
+                + COALESCE(NEW.price, 0)
+            WHERE ticket_id = NEW.ticket_id;
+        END IF;
+
+    ELSIF TG_OP = 'DELETE' THEN
+        -- Nếu là xóa bản ghi
+        IF TG_TABLE_NAME = 'seat_detail' THEN
+            -- Xử lý khi xóa từ bảng seat_detail
+            UPDATE ticket
+            SET total_money = total_money 
+                - COALESCE(OLD.price, 0)
+            WHERE ticket_id = OLD.ticket_id;
+
+        ELSIF TG_TABLE_NAME = 'product_detail' THEN
+            -- Xử lý khi xóa từ bảng product_detail
+            UPDATE ticket
+            SET total_money = total_money 
+                - COALESCE(OLD.quantity * OLD.unit_price, 0)
+            WHERE ticket_id = OLD.ticket_id;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+--trigger check seat_id phải khớp với phòng trong schedule (update function trước đó đã tạo)
+
+CREATE TRIGGER tg_on_update_seat_price
+BEFORE INSERT OR UPDATE ON seat_detail
+FOR EACH ROW
+EXECUTE PROCEDURE tf_on_update_seat_price();
+
+
+CREATE OR REPLACE FUNCTION tf_on_update_seat_price()
+RETURNS TRIGGER AS
+$$
+DECLARE sch int;
+BEGIN
+    sch := (SELECT schedule_id FROM ticket WHERE ticket_id = NEW.ticket_id);
+    -- Kiểm tra nếu tồn tại seat_id và giá phòng cho seat_id được nhập
+    IF EXISTS (
+        SELECT 1
+        FROM ticket t
+        	JOIN schedule sh USING (schedule_id)
+	JOIN seat s ON sh.room_id = s.room_id 
+        WHERE s.seat_id = NEW.seat_id AND t.ticket_id = NEW.ticket_id
+    ) THEN
+	-- kiểm tra seat_id đó đã được book chưa
+	IF NOT EXISTS (
+		SELECT 1 
+		FROM ticket t
+		JOIN schedule sche USING (schedule_id)
+		JOIN seat_detail s USING (ticket_id)
+		WHERE s.seat_id = NEW.seat_id and sche.schedule_id = sch
+	)
+	THEN
+        -- Cập nhật giá tiền từ bảng room
+        NEW.price := (
+            SELECT room.price
+            FROM seat 
+            JOIN room USING (room_id)
+            WHERE seat_id = NEW.seat_id
+        );
+	ELSE RAISE NOTICE 'seat_id = % has already booked ',NEW.seat_id;
+RETURN NULL;    
+END IF;
+ELSE
+        RAISE NOTICE 'seat_id = % not found', NEW.seat_id;
+	RETURN NULL;
+    END IF;
+
+    RETURN NEW; 
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- TRigger update giá product detail
+CREATE TRIGGER tg_on_update_product_price
+BEFORE INSERT OR UPDATE ON product_detail
+FOR EACH ROW
+EXECUTE PROCEDURE tf_on_update_product_price();
+
+CREATE OR REPLACE FUNCTION tf_on_update_product_price()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    -- Kiểm tra nếu tồn tại product_id được nhập
+    IF EXISTS (
+        SELECT 1
+        FROM product  
+        WHERE product_id = NEW.product_id
+    ) THEN
+        -- Cập nhật giá tiền từ bảng product
+        NEW.unit_price := (
+            SELECT product.price
+            FROM product 
+            WHERE product_id = NEW.product_id
+        );
+    ELSE
+        RAISE NOTICE 'product_id = % not found', NEW.product_id;
+    END IF;
+
+    RETURN NEW; 
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Trigger xử lí discount
+CREATE TRIGGER tg_on_discount
+AFTER UPDATE ON ticket
+FOR EACH ROW
+WHEN (NEW.discount_id IS DISTINCT FROM OLD.discount_id)
+EXECUTE PROCEDURE tf_on_discount();
+
+CREATE OR REPLACE FUNCTION tf_on_discount()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    IF NEW.discount_id IS NOT NULL THEN
+        IF EXISTS (
+            SELECT 1
+            FROM discount
+            WHERE discount_id = NEW.discount_id
+            AND date_expire < CURRENT_DATE
+        ) THEN
+            RAISE NOTICE 'discount_id = % is expired!', NEW.discount_id;
+            RETURN NEW;
+        END IF;
+   	IF EXISTS (
+            SELECT 1
+            FROM discount
+            WHERE discount_id = NEW.discount_id
+        ) THEN
+            UPDATE ticket
+            SET total_money = OLD.total_money * (1 - (
+                SELECT value::float / 100
+                FROM discount
+                WHERE discount_id = NEW.discount_id
+            ))
+            WHERE ticket_id = OLD.ticket_id;
+        ELSE
+            RAISE NOTICE 'discount_id = % does not exist!', NEW.discount_id;
+        END IF;
+
+    ELSIF OLD.discount_id IS NOT NULL THEN
+        UPDATE ticket
+        SET total_money = OLD.total_money / (1 - (
+            SELECT value::float / 100
+            FROM discount
+            WHERE discount_id = OLD.discount_id
+        ))
+        WHERE ticket_id = OLD.ticket_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- Trigger khi thay đổi user_id trong ticket 
+CREATE TRIGGER tg_update_user_id
+AFTER UPDATE OF user_id ON ticket
+FOR EACH ROW
+EXECUTE PROCEDURE tf_on_update_userid_money();
+
+CREATE OR REPLACE FUNCTION tf_on_update_userid_money()
+RETURNS TRIGGER AS
+$$
+BEGIN
+	UPDATE users
+	SET total_amount = total_amount - (SELECT total_money FROM ticket WHERE ticket_id = OLD.ticket_id)
+	WHERE user_id = OLD.user_id;
+
+	UPDATE users
+	SET total_amount = total_amount + (SELECT total_money FROM ticket WHERE ticket_id = NEW.ticket_id)
+	WHERE user_id = NEW.user_id;
+
+RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger delete on ticket;
+create trigger tg_on_delete_ticket
+after delete on ticket
+for each row
+execute procedure tf_on_delete_ticket();
+
+create or replace function tf_on_delete_ticket()
+returns trigger as
+$$
+begin
+	update users 
+	set total_amount = total_amount - old.total_money where user_id = old.user_id;
+return new;
+end;
+$$
+language plpgsql;
+
+-- Check kiểm tra thời gian hiệu lực của discount
+alter table discount add constraint check_valid_date_discount check (
+	date_expire > current_date and date_expire > date_start);
+
+-- Check kiểm tra giá phòng
+alter table room add constraint check_room_price check (
+	price > 0 and price < 500000);
+
+
+-- trigger kiểm tra conflict schedule
+create trigger tg_check_conflict_schedule
+before insert on schedule 
+for each row
+execute procedure tf_check_conflict_schedule();
+
+
+CREATE OR REPLACE FUNCTION tf_check_conflict_schedule()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM schedule
+        WHERE schedule_movie_date = NEW.schedule_movie_date
+          AND room_id = NEW.room_id
+          AND (
+              NEW.schedule_movie_start::time < (schedule_movie_start::time + interval '3 hours')
+              AND (NEW.schedule_movie_start::time + interval '3 hours') > schedule_movie_start::time
+          )
+    ) THEN
+        RAISE NOTICE 'Overlapped schedule!!';
+        RETURN NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
